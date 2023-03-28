@@ -1,12 +1,14 @@
 const ApiError = require('../error/ApiError')
 const { Basket, PizzasSizesVariants, PizzasTypesVariants, BasketPizzaDopProduct, Products, PizzasSizes, DopProduct
 } = require('../models/models')
+
 class BasketController {
 	async add (req, res, next) {
 		try{
 			const { pizzasSizedId, description, dopProducts, productId } = req.body;
 			
 			if( !description) return next(ApiError.badRequest('Нет данных'));
+			console.log(productId)
 			if(productId){
 				
 				const basket = await Basket.create({
@@ -44,7 +46,7 @@ class BasketController {
 		try {
 			
 			const baskets = await Basket.findAll({
-				attributes: ["id", "quantity", "description", "productId"],
+				attributes: ["id", "quantity", "description", "productId", "pizzasSizesVariantId"],
 				where: { userId: req.userId},
 				include:[
 					{
@@ -84,7 +86,7 @@ class BasketController {
 						id: item.id,
 						quantity: item.quantity,
 						composition: item.product.description,
-						
+						productId: item.productId,
 						description: item.description,
 						name: item.product.name,
 						img_url: item.product.img_url,
@@ -108,6 +110,7 @@ class BasketController {
 					
 					newItem = {
 						id: item.id,
+						pizzasSizedId: item.pizzasSizesVariantId,
 						quantity: item.quantity,
 						description: item.description,
 						composition: item.pizzas_sizes_variant.product.description,

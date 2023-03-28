@@ -13,4 +13,4 @@ const adminBro = new AdminBro({
 
 const adminRouter = AdminBroExpress.buildRouter(adminBro)
 
-module.exports = { adminRouter }
+module.exports = adminRouter

@@ -16,6 +16,7 @@ const PizzasTypesVariants = require("./PizzasTypesVariants-model");
 Users.hasMany(Orders);
 Orders.belongsTo(Users);
 
+
 /////////////////////-----PizzasSizesVariants
 
 Products.hasMany(PizzasSizesVariants)
@@ -61,6 +62,9 @@ OrderProduct.belongsTo(Orders);
 
 PizzasSizesVariants.hasMany(OrderProduct)
 OrderProduct.belongsTo(PizzasSizesVariants)
+
+Products.hasMany(OrderProduct)
+OrderProduct.belongsTo(Products)
 
 ////////---DopProductPizza
 

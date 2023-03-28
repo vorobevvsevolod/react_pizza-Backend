@@ -9,7 +9,8 @@ const routers = require('./routers/index')
 const PORT = process.env.PORT || 5000
 const fileUpload = require('express-fileupload')
 const errorHandler = require('./middleware/errorHandlerMiddleware')
-const { adminRouter } = require("./AdminBro")
+const adminRouter = require("./AdminBro");
+
 
 const app = express();
 app.use('/admin', adminRouter)
