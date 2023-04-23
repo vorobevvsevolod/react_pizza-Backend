@@ -1,5 +1,5 @@
 const { Users } = require('../models/models')
-const decodeJwt = require('../Utilities/decodeJwt')
+const decodeJwt = require('../utilities/decodeJwt')
 
 module.exports = async function (token){
 	try {

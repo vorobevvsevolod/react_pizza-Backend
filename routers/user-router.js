@@ -3,8 +3,6 @@ const router = new Router();
 const UserController = require('../controllers/user-controller')
 const AuthorizationMiddleware = require('../middleware/authorizationMiddleware')
 
-router.post('/registration', UserController.registration)
-
 router.post('/login', UserController.login)
 
 router.get('/me', AuthorizationMiddleware, UserController.getInfo)

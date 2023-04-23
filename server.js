@@ -11,14 +11,18 @@ const fileUpload = require('express-fileupload')
 const errorHandler = require('./middleware/errorHandlerMiddleware')
 const adminRouter = require("./AdminBro");
 
-
 const app = express();
-app.use('/admin', adminRouter)
 app.use(cors())
 app.use(express.json())
+
+//Фотографии
 app.use(express.static(path.resolve(__dirname, 'static/product')))
 app.use(express.static(path.resolve(__dirname, 'static/dopProduct')))
 app.use(express.static(path.resolve(__dirname, 'static/snacks')))
+
+app.use('/admin', adminRouter)
+
+
 app.use(fileUpload({}))
 app.use('/api', routers)
 app.use(errorHandler)

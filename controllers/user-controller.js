@@ -1,7 +1,10 @@
 const ApiError = require('../error/ApiError')
 const { Users} = require('../models/models')
 const bcrypt = require('bcrypt')
-const generateJwt = require('../Utilities/generateJwt')
+const generateJwt = require('../utilities/generateJwt')
+const generateCode = require('../utilities/generateCode')
+const nodemailer = require('../utilities/nodemailer')
+const enteredUsers = [];
 class UserController {
 	async registration (req, res, next) {
 		try{
@@ -23,21 +26,49 @@ class UserController {
 	
 	async login (req, res, next) {
 		try {
-			const {email, password} = req.body;
-			
-			if (!email || !password) return next(ApiError.badRequest('Ошибка нет данных'));
-			
-			const user = await Users.findOne({
-				where: { email: email }
-			})
-			
-			if (!user) return next(ApiError.badRequest('Неверный email или пароль'));
-			
-			const comparePassword = await bcrypt.compareSync(password, user.password);
-			if (!comparePassword) return next(ApiError.badRequest('Неверный email или пароль'));
-			
-			const token = generateJwt(user.id);
-			return res.json({message: token})
+			const { email, code} = req.body;
+
+			if(email){
+				const user = await Users.findOne({
+					where: { email: email }
+				})
+
+
+				if (!user) {
+					const newUser = await Users.create({email: email})
+
+					sendEmail(newUser)
+				}
+
+				sendEmail(user);
+			}
+
+			if(code){
+				const findUserWithCode = enteredUsers.find(user => user.code === Number(code));
+				if(!findUserWithCode) return next(ApiError.badRequest('Неверный код'));
+
+				const token = generateJwt(findUserWithCode.user.id);
+				return res.json({message: token});
+			}
+
+			function sendEmail (userDB){
+				const randomCode = generateCode();
+				let mailOptions = {
+					from: '"React-pizza" <diepioRegistarion@yandex.ru>',
+					to: email,
+					subject: "Ваш код для входа: " + randomCode,
+					text: `Здравствуйте, ${userDB.username}. Ваш код для входа: ${randomCode}`
+				}
+
+				nodemailer.sendMail(mailOptions, (error, info) => {
+					if (error) console.log(error);
+					else console.log("Email sent: " + info.response);
+				});
+
+				enteredUsers.push({user: userDB, code: randomCode})
+
+				return res.json({message: "Ваш код на почте )" + randomCode});
+			}
 			
 		}catch (e) {
 			return next(ApiError.internal(e.message));
