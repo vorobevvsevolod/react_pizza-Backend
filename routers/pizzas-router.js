@@ -7,5 +7,4 @@ router.post('/type', ProductsController.createPizzaType)
 
 router.get('/', ProductsController.getAll)
 
-
 module.exports = router

@@ -5,7 +5,7 @@ const Orders = sequalize.define('orders', {
 	id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
 	total_price: {type: DataTypes.INTEGER, allowNull: false},
 	address: {type: DataTypes.STRING, allowNull: false},
-	phone: {type: DataTypes.NUMBER},
+	phone: {type: DataTypes.STRING},
 	status: {type: DataTypes.STRING, allowNull: false, defaultValue: "Обрабатывается"},
 })
 

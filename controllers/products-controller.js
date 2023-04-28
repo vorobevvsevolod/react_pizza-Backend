@@ -2,6 +2,7 @@ const ApiError = require('../error/ApiError')
 const { Products, PizzaInfo, PizzasTypesVariants, PizzasSizesVariants, DopProductPizza} = require('../models/models')
 const uuid = require('uuid')
 const path = require('path')
+const {where, Op} = require("sequelize");
 class ProductsController {
 	async create (req, res, next){
 		try {
@@ -99,21 +100,31 @@ class ProductsController {
 	}
 	async getAll(req, res, next) {
 		try {
-			let { typeId, limit, offset, isCount } = req.query;
+			let { typeId, limit, offset, isCount, search } = req.query;
 			
 			if(!offset && !limit) {
 				offset = 0;
 				limit = 4;
 			}
+			if(!search) search = "";
 			let count = null;
 			
-			if(isCount) count = await Products.count({ where: { productsTypeId: typeId } });
+			if(isCount) count = await Products.count({ where: { productsTypeId: typeId,
+					name: {
+						[Op.iLike]: '%' + search + '%'
+					}
+				}
+			});
 			
 			
 			if(Number(typeId) === 1){
 				const pizzas = await Products.findAll({
 					attributes: ["id", "name", "price", "img_url", "description", "productsTypeId"],
-					where:{productsTypeId: typeId},
+					where:{productsTypeId: typeId,
+						name: {
+							[Op.iLike]: '%' + search + '%'
+						}
+					},
 					order: [["id", "asc"]],
 					offset: offset,
 					limit: limit,
@@ -169,10 +180,14 @@ class ProductsController {
 			}
 			
 			const products = await Products.findAll({
+				
 				attributes: ["id", "name", "price", "img_url","description", "productsTypeId"],
 				offset: offset,
 				limit: limit,
-				where:{productsTypeId: typeId},
+				where:{productsTypeId: typeId,
+					name: {
+						[Op.iLike]: '%' + search + '%'
+					}},
 				include: [
 					{
 						model: PizzaInfo,
@@ -186,6 +201,23 @@ class ProductsController {
 		} catch (e) {
 			return next(ApiError.internal(e.message));
 		}
+	}
+	
+	async search (req, res, next){
+		const { search } = req.query;
+		
+		if(!search) return next(ApiError.badRequest('Ошибка'));
+		
+		const products = await Products.findAll({
+			attributes: ["id", "name", "price", "img_url", "description", "productsTypeId"],
+			where: {
+				name: {
+					[Op.iLike]: '%' + search + '%'
+				}
+			}
+		})
+		
+		return res.json({message: products})
 	}
 	
 	async getById (req, res, next){

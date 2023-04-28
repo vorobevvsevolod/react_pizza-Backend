@@ -26,20 +26,13 @@ class UserController {
 	
 	async login (req, res, next) {
 		try {
-			const { email, code} = req.body;
-
+			
+			const { email, code } = req.body;
+			
 			if(email){
-				const user = await Users.findOne({
+				const user = await Users.findOrCreate({
 					where: { email: email }
 				})
-
-
-				if (!user) {
-					const newUser = await Users.create({email: email})
-
-					sendEmail(newUser)
-				}
-
 				sendEmail(user);
 			}
 
@@ -127,6 +120,7 @@ class UserController {
 	async changePhone (req, res, next) {
 		try {
 			const { phone } = req.query;
+			console.log(req.userId);
 			
 			if(!phone) return next(ApiError.badRequest('Нет данных'));
 			

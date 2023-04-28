@@ -1,6 +1,6 @@
 const ApiError = require('../error/ApiError')
 const { PizzasSizes, Orders, OrderProduct} = require('../models/models')
-const {NUMBER} = require("sequelize");
+const {NUMBER, STRING} = require("sequelize");
 
 class OrdersController {
 	
