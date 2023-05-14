@@ -1,5 +1,5 @@
 const ApiError = require('../error/ApiError')
-const { PizzasSizes, Orders, OrderProduct} = require('../models/models')
+const { PizzasSizes, Orders, OrderProduct, OrderStatus} = require('../models/models')
 const {NUMBER, STRING} = require("sequelize");
 
 class OrdersController {
@@ -11,19 +11,23 @@ class OrdersController {
 			let totalPrice = 0;
 			products.map((item) => totalPrice += item.price * item.quantity)
 			let order;
-			if(phone){
-				 order = await Orders.create({
+			if(req.userId){
+				order = await Orders.create({
 					total_price: totalPrice,
 					address: address,
-					phone: phone
-				})
-			} else {
-				 order = await Orders.create({
-					total_price: totalPrice,
-					address: address,
+					phone: phone.slice(1),
+					orderStatusId: 1,
 					userId: req.userId
 				})
+			}else{
+				order = await Orders.create({
+					total_price: totalPrice,
+					address: address,
+					phone: phone.slice(1),
+					orderStatusId: 1
+				})
 			}
+			
 			
 			const promises = await products.map(item => {
 				if(item.productId){
@@ -54,16 +58,34 @@ class OrdersController {
 	
 	async getAll (req, res, next){
 		try {
+			const { id } = req.query;
+			
 			if(req.phone){
-				const orders = await Orders.findAll({where: {
-					phone: req.phone
-					}})
-				return res.json({message: orders})
+				if(id){
+					const orders = await Orders.findAll({where: {
+							phone: req.phone,
+							id: id
+						}})
+					return res.json({message: orders})
+				} else {
+					const orders = await Orders.findAll({where: {
+							phone: req.phone
+						}})
+					return res.json({message: orders})
+				}
 			} else {
-				const orders = await Orders.findAll({where: {
-						userId: req.userId
-					}})
-				return res.json({message: orders})
+				if(id){
+					const orders = await Orders.findAll({where: {
+							userId: req.userId,
+							id: id
+						}})
+					return res.json({message: orders})
+				} else {
+					const orders = await Orders.findAll({where: {
+							userId: req.userId
+						}})
+					return res.json({message: orders})
+				}
 			}
 			
 			
@@ -72,6 +94,40 @@ class OrdersController {
 		}
 	}
 	
+	async getByIdWithPhoneOrToken (req, res, next){
+		try {
+			const { id } = req.params;
+			if ( !id ) return next(ApiError.badRequest('Нет данных'));
+			console.log(req.query);
+			
+			if(req.phone){
+				const orders = await Orders.findOne({where: {
+						phone: req.phone,
+						id: id
+					}})
+				return res.json({message: orders})
+			} else {
+				const orders = await Orders.findOne({where: {
+						userId: req.userId,
+						id: id
+					}})
+				return res.json({message: orders})
+			}
+			
+		}catch (e){
+			return next(ApiError.internal(e.message));
+		}
+	}
+	
+	
+	async getStatus (req, res, next){
+		try {
+			const orderStatus = await OrderStatus.findAll({attributes: ['id', 'name'], order: [["id", "asc"]]});
+			return res.json({message: orderStatus})
+		}catch (e) {
+			return next(ApiError.internal(e.message));
+		}
+	}
 }
 
 module.exports = new OrdersController();

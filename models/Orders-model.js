@@ -6,7 +6,6 @@ const Orders = sequalize.define('orders', {
 	total_price: {type: DataTypes.INTEGER, allowNull: false},
 	address: {type: DataTypes.STRING, allowNull: false},
 	phone: {type: DataTypes.STRING},
-	status: {type: DataTypes.STRING, allowNull: false, defaultValue: "Обрабатывается"},
 })
 
 module.exports = Orders;

@@ -7,6 +7,7 @@ const PizzaInfo = require("./PizzaInfo-model");
 const PizzasSizes = require("./PizzasSizes-model");
 const PizzasTypes = require("./PizzasTypes-model");
 const Orders = require("./Orders-model");
+const OrderStatus = require("./OrdersStatus-model");
 const OrderProduct = require("./OrderProduct-model");
 const Products = require("./Products-model");
 const ProductsTypes = require('./ProductsTypes')
@@ -60,6 +61,10 @@ Basket.belongsTo(Products);
 Orders.hasMany(OrderProduct);
 OrderProduct.belongsTo(Orders);
 
+OrderStatus.hasMany(Orders);
+Orders.belongsTo(OrderStatus)
+
+
 PizzasSizesVariants.hasMany(OrderProduct)
 OrderProduct.belongsTo(PizzasSizesVariants)
 
@@ -97,5 +102,6 @@ module.exports ={
 	Products,
 	PizzasSizesVariants,
 	PizzasTypesVariants,
-	ProductsTypes
+	ProductsTypes,
+	OrderStatus
 }

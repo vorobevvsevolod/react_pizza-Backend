@@ -40,7 +40,7 @@ class UserController {
 				const findUserWithCode = enteredUsers.find(user => user.code === Number(code));
 				if(!findUserWithCode) return next(ApiError.badRequest('Неверный код'));
 
-				const token = generateJwt(findUserWithCode.user.id);
+				const token = generateJwt(findUserWithCode.user[0].dataValues.id);
 				return res.json({message: token});
 			}
 

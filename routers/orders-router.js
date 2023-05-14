@@ -5,8 +5,8 @@ const AuthorizationMiddleware = require('../middleware/authorizationMiddleware')
 
 router.post('/', AuthorizationMiddleware, OrdersController.create)
 router.get('/', AuthorizationMiddleware, OrdersController.getAll)
-
-//router.get('/:id', UserController.registration)
+router.get('/status', OrdersController.getStatus)
+router.get('/:id', OrdersController.getByIdWithPhoneOrToken)
 
 
 

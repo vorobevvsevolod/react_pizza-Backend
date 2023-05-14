@@ -4,6 +4,7 @@ module.exports = async function  (req, res, next){
 	
 	try{
 		const token = req.headers.authorization;
+		
 		if (!token) {
 			if(req.query.phone){
 				req.phone = req.query.phone;
@@ -19,9 +20,11 @@ module.exports = async function  (req, res, next){
 		const destructToken = token.split(' ')[1];
 		
 		const result = await authorizationValidator(destructToken);
+		
 		if (!result.status) return next(ApiError.badRequest("Ошибка авторизации"));
 		
 		req.userId = result.id;
+		console.log(req.userId);
 		next()
 		
 	}catch (e){
