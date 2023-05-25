@@ -1,6 +1,6 @@
 const ApiError = require('../error/ApiError')
-const { PizzasSizes, Orders, OrderProduct, OrderStatus} = require('../models/models')
-const {NUMBER, STRING} = require("sequelize");
+const { Orders, OrderProduct, OrderStatus} = require('../models/models')
+
 
 class OrdersController {
 	
@@ -52,6 +52,7 @@ class OrdersController {
 			
 			return res.json({message: order})
 		}catch (e) {
+			console.log(e);
 			return next(ApiError.internal(e.message));
 		}
 	}
@@ -98,7 +99,6 @@ class OrdersController {
 		try {
 			const { id } = req.params;
 			if ( !id ) return next(ApiError.badRequest('Нет данных'));
-			console.log(req.query);
 			
 			if(req.phone){
 				const orders = await Orders.findOne({where: {
@@ -114,6 +114,24 @@ class OrdersController {
 				return res.json({message: orders})
 			}
 			
+		}catch (e){
+			return next(ApiError.internal(e.message));
+		}
+	}
+	
+	async search (req, res, next){
+		try {
+			const { phone } = req.query;
+			
+			if(phone){
+				const orders = await Orders.findAll({where: {
+						phone: phone,
+					},
+					order: [["id", "DESC"]]
+				})
+				return res.json({message: orders})
+			}
+
 		}catch (e){
 			return next(ApiError.internal(e.message));
 		}

@@ -11,7 +11,7 @@ module.exports = async function  (req, res, next){
 				return next();
 			}
 			if(req.body.phone){
-				req.userId = req.body.phone;
+				req.phone = req.body.phone;
 				return next();
 			}
 			return next(ApiError.badRequest("Ошибка авторизации"));
@@ -24,7 +24,6 @@ module.exports = async function  (req, res, next){
 		if (!result.status) return next(ApiError.badRequest("Ошибка авторизации"));
 		
 		req.userId = result.id;
-		console.log(req.userId);
 		next()
 		
 	}catch (e){
