@@ -52,6 +52,7 @@ class UserController {
 					subject: "Ваш код для входа: " + randomCode,
 					text: `Здравствуйте, ${userDB.username}. Ваш код для входа: ${randomCode}`
 				}
+				console.log(randomCode);
 
 				nodemailer.sendMail(mailOptions, (error, info) => {
 					if (error) console.log(error);
