@@ -1,5 +1,5 @@
 const ApiError = require('../error/ApiError')
-const { Orders, OrderProduct, OrderStatus} = require('../models/models')
+const { Orders, OrderProduct, OrderStatus, Users} = require('../models/models')
 
 
 class OrdersController {
@@ -18,7 +18,20 @@ class OrdersController {
 					phone: phone.slice(1),
 					orderStatusId: 1,
 					userId: req.userId
+				});
+
+				const user = await Users.findOne({
+					where: { id: req.userId }
 				})
+
+				if(!user.phone){
+					const update = await Users.update({
+						phone: phone
+					}, {
+						where: { id: req.userId }
+					})
+				}
+
 			}else{
 				order = await Orders.create({
 					total_price: totalPrice,
@@ -27,6 +40,8 @@ class OrdersController {
 					orderStatusId: 1
 				})
 			}
+
+			
 			
 			
 			const promises = await products.map(item => {

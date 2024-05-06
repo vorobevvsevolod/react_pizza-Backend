@@ -12,4 +12,6 @@ router.delete('/:id', AuthorizationMiddleware, BasketPizzaController.delete)
 
 router.post('/dopproduct', AuthorizationMiddleware, BasketPizzaController.deleteDopProduct)
 
+router.get('/clear', AuthorizationMiddleware, BasketPizzaController.clearCart)
+
 module.exports = router

@@ -182,6 +182,32 @@ class BasketController {
 			return next(ApiError.internal(e.message));
 		}
 	}
+
+	async clearCart(req, res, next) {
+		try {
+			if (!req.userId) return next(ApiError.badRequest('Пользователь не найден'));
+	
+			const baskets = await Basket.findAll({ where: { userId: req.userId } });
+
+			if(!baskets) return next(ApiError.badRequest('Корзина пуста!'));
+	
+			await Promise.all(baskets.map(async (basket) => {
+				const deleteDopProducts = await BasketPizzaDopProduct.destroy({ where: { basketId: basket.id } });
+			}));
+	
+			await Basket.destroy({
+				where: {
+					userId: req.userId,
+				},
+			});
+	
+			return res.json({ message: 'Корзина очищена!' });
+	
+		} catch (e) {
+			return next(ApiError.internal(e.message));
+		}
+	}
+	
 }
 
 module.exports = new BasketController();
