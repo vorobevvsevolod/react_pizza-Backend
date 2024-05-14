@@ -19,6 +19,7 @@ app.use(express.json())
 app.use(express.static(path.resolve(__dirname, 'static/product')))
 app.use(express.static(path.resolve(__dirname, 'static/dopProduct')))
 app.use(express.static(path.resolve(__dirname, 'static/snacks')))
+app.use(express.static(path.resolve(__dirname, 'static/Combo')))
 
 app.use('/admin', adminRouter)
 

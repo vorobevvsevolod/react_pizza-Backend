@@ -13,6 +13,11 @@ const Products = require("./Products-model");
 const ProductsTypes = require('./ProductsTypes')
 const PizzasSizesVariants = require("./PizzasSizesVariants-model");
 const PizzasTypesVariants = require("./PizzasTypesVariants-model");
+const Combo = require("./Combo-model");
+const PizzaCombo = require("./PizzaCombo-model");
+const ComboDefault = require("./ComboDefault-model");
+const BasketCombo = require("./BasketCombo-model");
+
 
 Users.hasMany(Orders);
 Orders.belongsTo(Users);
@@ -55,7 +60,6 @@ Basket.belongsTo(Users);
 Products.hasMany(Basket);
 Basket.belongsTo(Products);
 
-
 /////////---OrderProduct
 
 Orders.hasMany(OrderProduct);
@@ -88,6 +92,47 @@ Basket.hasMany(BasketPizzaDopProduct)
 BasketPizzaDopProduct.belongsTo(Basket)
 
 
+//////---PizzaCombo
+
+PizzasSizes.hasMany(PizzaCombo)
+PizzaCombo.belongsTo(PizzasSizes)
+
+Products.hasMany(PizzaCombo);
+PizzaCombo.belongsTo(Products);
+
+Combo.hasMany(PizzaCombo);
+PizzaCombo.belongsTo(Combo);
+
+//////---ComboDefault
+PizzasSizesVariants.hasMany(ComboDefault)
+ComboDefault.belongsTo(PizzasSizesVariants)
+
+Products.hasMany(ComboDefault);
+ComboDefault.belongsTo(Products);
+
+Combo.hasMany(ComboDefault);
+ComboDefault.belongsTo(Combo);
+
+ProductsTypes.hasMany(ComboDefault);
+ComboDefault.belongsTo(ProductsTypes);
+
+
+
+
+//////---BasketCombo
+
+Products.hasMany(BasketCombo);
+BasketCombo.belongsTo(Products);
+
+PizzasSizesVariants.hasMany(BasketCombo)
+BasketCombo.belongsTo(PizzasSizesVariants)
+
+Combo.hasMany(BasketCombo);
+BasketCombo.belongsTo(Combo);
+
+Basket.hasMany(BasketCombo);
+BasketCombo.belongsTo(Basket);
+
 module.exports ={
 	Users,
 	Basket,
@@ -103,5 +148,9 @@ module.exports ={
 	PizzasSizesVariants,
 	PizzasTypesVariants,
 	ProductsTypes,
-	OrderStatus
+	OrderStatus,
+	Combo,
+	PizzaCombo,
+	ComboDefault,
+	BasketCombo
 }

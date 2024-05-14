@@ -31,11 +31,7 @@ class ProductsController {
 			}
 			
 			const { calories, squirrels, fats, carbohydrates, weight } = req.body;
-			// switch (typeId){
-			// 	case 1:  break;
-			// 	case 2:  break;
-			// }
-			//
+
 			img.mv(path.resolve(__dirname, '..', 'static/snacks', fileName));
 			
 			const productInfo = await PizzaInfo.create({

@@ -9,6 +9,7 @@ const dopProductPizzasRouter = require('./dopProductPizzas-router')
 const BasketPizzaRouter = require('./basketPizza-router')
 const ProductTypesRouter = require('./productsTypes-router')
 const OrdersRouter = require('./orders-router')
+const ComboRouter = require('./Combo-router')
 
 router.use('/user', userRouter)
 router.use('/types', typesRouter)
@@ -19,6 +20,7 @@ router.use('/dopproductpizza', dopProductPizzasRouter)
 router.use('/basketpizza', BasketPizzaRouter)
 router.use('/productstypes', ProductTypesRouter)
 router.use('/orders', OrdersRouter)
+router.use('/combo', ComboRouter)
 
 
 module.exports = router

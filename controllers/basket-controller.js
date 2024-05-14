@@ -1,41 +1,84 @@
 const ApiError = require('../error/ApiError')
-const { Basket, PizzasSizesVariants, PizzasTypesVariants, BasketPizzaDopProduct, Products, PizzasSizes, DopProduct
+const { Basket, PizzasSizesVariants, PizzasTypesVariants, BasketPizzaDopProduct, Products, PizzasSizes, DopProduct, BasketCombo, Combo, PizzaCombo
 } = require('../models/models')
 
 class BasketController {
 	async add (req, res, next) {
 		try{
-			const { pizzasSizedId, description, dopProducts, productId } = req.body;
+			const { pizzasSizedId, description, dopProducts, productId, basketCombos, comboId } = req.body;
 			
 			if( !description) return next(ApiError.badRequest('Нет данных'));
-			console.log(productId)
-			if(productId){
-				
+
+			console.log(basketCombos)
+
+
+			
+
+			if(basketCombos){
+
 				const basket = await Basket.create({
-					productId: productId,
 					description: description,
 					userId: req.userId,
 				})
-				return res.json({message: basket.id})
-				
-			} else {
-				
-				const basket = await Basket.create({
-					pizzasSizesVariantId: pizzasSizedId,
-					description: description,
-					userId: req.userId,
-				} )
-				const promises = dopProducts.map((dopProduct) => {
-					const dopPr = BasketPizzaDopProduct.create({
-						dodProductId: dopProduct,
-						basketId: basket.id,
-					});
-					return dopPr;
+
+				const promises = basketCombos.map((basketCombo) => {
+					if(basketCombo.productId){
+						const basketCom = BasketCombo.create({
+							basketId: basket.id,
+							productId:basketCombo.productId,
+							comboId: comboId
+						});
+						return basketCom;
+					}else{
+						const basketCom = BasketCombo.create({
+							basketId: basket.id,
+							pizzasSizesVariantId: basketCombo.pizzasSizesVariantId,
+							comboId: comboId
+						});
+						return basketCom;
+					}
+					
 				});
+
 				const result = await Promise.all(promises)
+
 				return res.json({message: basket.id})
+			} else {
+				if(productId){
 				
+					const basket = await Basket.create({
+						productId: productId,
+						description: description,
+						userId: req.userId,
+					})
+					return res.json({message: basket.id})
+					
+				} else {
+					
+					const basket = await Basket.create({
+						pizzasSizesVariantId: pizzasSizedId,
+						description: description,
+						userId: req.userId,
+					} )
+					if(dopProducts){
+						const promises = dopProducts.map((dopProduct) => {
+							const dopPr = BasketPizzaDopProduct.create({
+								dodProductId: dopProduct,
+								basketId: basket.id,
+							});
+							return dopPr;
+						});
+						const result = await Promise.all(promises)
+						return res.json({message: basket.id})
+					}
+					
+					return res.json({message: basket.id})
+				}
 			}
+
+			
+
+
 			
 		}catch (e) {
 			console.log(e)
@@ -81,7 +124,45 @@ class BasketController {
 			
 			const newBaskets = await Promise.all(baskets.map(async (item) => {
 				let newItem;
-				if(item.productId){
+
+			if(!item.productId && !item.pizzasSizesVariantId){
+
+				const productCombo = await BasketCombo.findAll({where: {basketId: item.id}})
+				const ComboInfo = await Combo.findOne({where: {id: productCombo[0].dataValues.comboId}})
+
+				const increasePromises = productCombo.map(async pr => {
+					if (pr.pizzasSizesVariantId) {
+						const PizzasS = await PizzasSizesVariants.findOne({ where: { id: pr.pizzasSizesVariantId } });
+						const pizzaC = await PizzaCombo.findOne({ where: { productId: PizzasS.productId } });
+				
+						return pizzaC.increase;
+					}
+				
+					if (pr.productId) {
+						const pizzaC = await PizzaCombo.findOne({ where: { productId: pr.productId } });
+						return pizzaC.increase;
+					}
+				
+					return 0; 
+				});
+				
+				const increases = await Promise.all(increasePromises);
+				
+				const totalIncrease = increases.reduce((acc, curr) => acc + curr, 0);
+
+				return {
+					id: item.id,
+					pizzasSizedId: '',
+					quantity: item.quantity,
+					description: '',
+					composition: item.description,
+					name: 'Комбо '+ ComboInfo.name,
+					dopProducts: '',
+					img_url: ComboInfo.img_url,
+					price:  totalIncrease + ComboInfo.price,
+				};
+
+			} else if(item.productId){
 					newItem = {
 						id: item.id,
 						quantity: item.quantity,
@@ -155,7 +236,9 @@ class BasketController {
 			if ( !id ) return next(ApiError.badRequest('Нет данных'));
 			
 			const deleteDopProducts = await BasketPizzaDopProduct.destroy({where: { basketId: id }})
+			const deleteComboProdutcs= await BasketCombo.destroy({where: { basketId: id}})
 			const deleteItem = await Basket.destroy({where: { id: id}})
+			
 			
 			return res.json({message: deleteItem})
 			
