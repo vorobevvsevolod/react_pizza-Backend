@@ -1,28 +1,11 @@
 const ApiError = require('../error/ApiError')
-const { Users} = require('../models/models')
+const { Users, Orders} = require('../models/models')
 const bcrypt = require('bcrypt')
 const generateJwt = require('../utilities/generateJwt')
 const generateCode = require('../utilities/generateCode')
 const nodemailer = require('../utilities/nodemailer')
 const enteredUsers = [];
 class UserController {
-	async registration (req, res, next) {
-		try{
-			const {email, password, username} = req.body
-			if(!email ||  !password || !username)  return next(ApiError.badRequest('ошибка регистрации'));
-			
-			const candidate = await Users.findOne({where: {email: email}})
-			if (candidate !== null) return next(ApiError.badRequest('Пользователь уже зарегистрирован'));
-			
-			const hashPassword = await bcrypt.hash(password, 5);
-			const user = await Users.create({email: email, username: username, password: hashPassword})
-			const token = generateJwt(user.id);
-			
-			return res.json({message: token})
-		}catch (e) {
-			return next(ApiError.internal(e.message));
-		}
-	}
 	
 	async login (req, res, next) {
 		try {
@@ -39,9 +22,9 @@ class UserController {
 			if(code){
 				const findUserWithCode = enteredUsers.find(user => user.code === Number(code));
 				if(!findUserWithCode) return next(ApiError.badRequest('Неверный код'));
-
 				const token = generateJwt(findUserWithCode.user[0].dataValues.id);
 				return res.json({message: token});
+				
 			}
 
 			function sendEmail (userDB){
@@ -82,7 +65,7 @@ class UserController {
 	
 	async changeUsername (req, res, next) {
 		try {
-			const { username } = req.query;
+			const { username } = req.body;
 			
 			if(!username) return next(ApiError.badRequest('Нет данных'));
 			
@@ -91,8 +74,12 @@ class UserController {
 			}, {
 				where: { id: req.userId }
 			})
+
+			if(update){
+				return res.json({message: ''})
+
+			} else return next(ApiError.badRequest('Ошибка обновления'));
 			
-			return res.json({message: update})
 			
 		}catch (e) {
 			return next(ApiError.internal(e.message));
@@ -101,7 +88,7 @@ class UserController {
 	
 	async changeEmail (req, res, next) {
 		try {
-			const { email } = req.query;
+			const { email } = req.body;
 			
 			if(!email) return next(ApiError.badRequest('Нет данных'));
 			
@@ -111,32 +98,78 @@ class UserController {
 				where: { id: req.userId }
 			})
 			
-			return res.json({message: update})
+			if(update){
+				return res.json({message: ''})
+
+			} else return next(ApiError.badRequest('Ошибка обновления'));
 			
 		}catch (e) {
 			return next(ApiError.internal(e.message));
 		}
 	}
 	
-	async changePhone (req, res, next) {
+	async changePhone(req, res, next) {
 		try {
-			const { phone } = req.query;
-			console.log(req.userId);
+			const { phone } = req.body;
+	
+			if (!phone) return next(ApiError.badRequest('Нет данных'));
+	
+			const user = await Users.findOne({ where: { id: req.userId } });
+			if (!user) return next(ApiError.badRequest('Пользователь не найден'));
+
+			const userPhone = await Users.findOne({ where: { phone: phone } });
 			
-			if(!phone) return next(ApiError.badRequest('Нет данных'));
+			if (userPhone && user.phone) return next(ApiError.badRequest(`Этот номер телефона привязан к другой почте (${hideEmail(userPhone.email)}), если вы хотите пользоваться этим номером телефона войдите в другой акканут к которому привязан этот номер телефона!`));
+	
+			const ordersUserId = await Orders.findAll({ where: { userId: req.userId } });
+	
+			const promisesOne = ordersUserId.map((orderUserId) => {
+				return Orders.update(
+					{ userId: null },
+					{ where: { id: orderUserId.id } }
+				);
+			});
+	
+			const ordersPhone = await Orders.findAll({ where: { phone: phone.slice(1) } });
+			const promisesTwo = ordersPhone.map((orderPhone) => {
+				return Orders.update(
+					{ userId: req.userId },
+					{ where: { id: orderPhone.id, userId: null } }
+				);
+			});
+	
+			await Promise.all(promisesOne);
+			await Promise.all(promisesTwo);
+	
+			const update = await Users.update(
+				{ phone: phone },
+				{ where: { id: req.userId } }
+			);
+	
+			if (update) {
+				return res.json({ message: 'Номер телефона успешно обновлен' });
+			} else {
+				return next(ApiError.badRequest('Ошибка обновления'));
+			}
+
+			function hideEmail(email) {
+				const [user, domain] = email.split('@');
+				
+				if (user.length <= 4) {
+					return `${user[0]}...@${domain}`;
+				}
 			
-			const update = await Users.update({
-				phone: phone
-			}, {
-				where: { id: req.userId }
-			})
+				const hiddenPart = user.slice(1, -1); 
+				
+				const hiddenEmail = `${user[0]}${'.'.repeat(hiddenPart.length)}${user[user.length - 1]}@${domain}`;
 			
-			return res.json({message: update})
-			
-		}catch (e) {
+				return hiddenEmail;
+			}
+		} catch (e) {
 			return next(ApiError.internal(e.message));
 		}
 	}
+	
 }
 
 module.exports = new UserController();

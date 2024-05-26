@@ -8,6 +8,14 @@ class ApiError extends Error{
 	static badRequest(message){
 		return new ApiError(404, message)
 	}
+
+	static validationError(message){
+		return new ApiError(422, message)
+	}
+
+	static unauthorized(message){
+		return new ApiError(401, message)
+	}
 	
 	static internal(message){
 		return new ApiError(500, message)

@@ -7,19 +7,14 @@ class BasketController {
 		try{
 			const { pizzasSizedId, description, dopProducts, productId, basketCombos, comboId } = req.body;
 			
-			if( !description) return next(ApiError.badRequest('Нет данных'));
-
-			console.log(basketCombos)
-
-
-			
-
-			if(basketCombos){
-
+			if( !description, !req.userId) return next(ApiError.badRequest('Нет данных'));
+			if(basketCombos && basketCombos.length){
 				const basket = await Basket.create({
 					description: description,
 					userId: req.userId,
 				})
+
+				if( !comboId) return next(ApiError.badRequest('Нет данных'));
 
 				const promises = basketCombos.map((basketCombo) => {
 					if(basketCombo.productId){
@@ -54,7 +49,8 @@ class BasketController {
 					return res.json({message: basket.id})
 					
 				} else {
-					
+					if( !pizzasSizedId) return next(ApiError.badRequest('Нет данных'));
+
 					const basket = await Basket.create({
 						pizzasSizesVariantId: pizzasSizedId,
 						description: description,
@@ -224,7 +220,10 @@ class BasketController {
 				where: { id: id }
 			})
 		
-			return res.json({message: update})
+			if(update){
+				return res.json({message: ''})
+	
+			} else return next(ApiError.badRequest('Ошибка обновления'));
 			
 		}catch (e) {
 			return next(ApiError.internal(e.message));
@@ -240,7 +239,10 @@ class BasketController {
 			const deleteItem = await Basket.destroy({where: { id: id}})
 			
 			
-			return res.json({message: deleteItem})
+			if(deleteItem){
+				return res.json({message: ''})
+	
+			} else return next(ApiError.badRequest('Ошибка удаление'));
 			
 		}catch (e) {
 			return next(ApiError.internal(e.message));
@@ -259,7 +261,10 @@ class BasketController {
 				}
 			})
 			
-			return res.json({message: deleteDopProduct})
+			if(deleteDopProduct){
+				return res.json({message: ''})
+	
+			} else return next(ApiError.badRequest('Ошибка удаление'));
 			
 		}catch (e) {
 			return next(ApiError.internal(e.message));
@@ -276,6 +281,9 @@ class BasketController {
 	
 			await Promise.all(baskets.map(async (basket) => {
 				const deleteDopProducts = await BasketPizzaDopProduct.destroy({ where: { basketId: basket.id } });
+				if(!basket.pizzasSizesVariantId && !basket.productId){
+					const deleteDopProducts = await BasketCombo.destroy({ where: { basketId: basket.id } });
+				}
 			}));
 	
 			await Basket.destroy({
@@ -283,6 +291,8 @@ class BasketController {
 					userId: req.userId,
 				},
 			});
+
+
 	
 			return res.json({ message: 'Корзина очищена!' });
 	

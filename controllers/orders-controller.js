@@ -1,19 +1,22 @@
 const ApiError = require('../error/ApiError')
 const { Orders, OrderProduct, OrderStatus, Users} = require('../models/models')
-
+const bcrypt = require('bcrypt');
+const nodemailer = require('../utilities/nodemailer')
 
 class OrdersController {
 	
 	async create (req, res, next){
 		try {
 			const {  products, address, phone } = req.body;
-			if (!products || !address) return next(ApiError.badRequest('Нет данных'));
+			if (!products || !address || !phone) return next(ApiError.badRequest('Нет данных'));
 			let totalPrice = 0;
-			products.map((item) => totalPrice += item.price * item.quantity)
+			products.map((item) => {
+				totalPrice += item.price * item.quantity
+			} )
 			let order;
 			if(req.userId){
 				order = await Orders.create({
-					total_price: totalPrice,
+					total_price: Number(totalPrice) ,
 					address: address,
 					phone: phone.slice(1),
 					orderStatusId: 1,
@@ -32,7 +35,10 @@ class OrdersController {
 					})
 				}
 
+				
+
 			}else{
+				
 				order = await Orders.create({
 					total_price: totalPrice,
 					address: address,
@@ -41,31 +47,37 @@ class OrdersController {
 				})
 			}
 
-			
-			
-			
-			const promises = await products.map(item => {
-				if(item.productId){
-					OrderProduct.create({
-						orderId: order.id,
-						productId: item.productId,
-						quantity: item.quantity,
-						price: item.price,
-						description: item.description
-					})
-				} else {
-					OrderProduct.create({
-						orderId: order.id,
-						pizzasSizesVariantId: item.pizzasSizesVariantId,
-						quantity: item.quantity,
-						price: item.price,
-						description: item.description
-					})
-				}
+			if(!order) return next(ApiError.badRequest('Ошибка создания заказа!'));
+
+			const combinedString = `${phone}-${order.id}`;
+					
+			const hashedOrderNumber = bcrypt.hashSync(combinedString, 5); 
+				
+			const uniqueOrderNumber = hashedOrderNumber.slice(10, 20) + `-${order.id}`;
+
+			const orderUpdate = await Orders.update({
+				nomer: uniqueOrderNumber
+			},
+			{
+				where: {id: order.id}
 			})
+			if(req.userId){
+				const user = await Users.findOne({
+					where: { id: req.userId }
+				})
+				let mailOptions = {
+					from: '"React-pizza" <diepioRegistarion@yandex.ru>',
+					to: user.email,
+					subject: "Здравствуйте, вы сделали в нашем ресторане заказ!",
+					text: `Здравствуйте! Спасибо что выбрали нас, номер вашего заказа ${uniqueOrderNumber}. Вы можете посмотреть статуст вашего заказа по ссылке https://tomcat-darling-infinitely.ngrok-free.app/order/${uniqueOrderNumber}`
+				}
+				nodemailer.sendMail(mailOptions, (error, info) => {
+					if (error) console.log(error);
+					else console.log("Email sent: " + info.response);
+				});
+			}
 			
-			
-			return res.json({message: order})
+			return res.json({message: uniqueOrderNumber})
 		}catch (e) {
 			console.log(e);
 			return next(ApiError.internal(e.message));
@@ -110,42 +122,17 @@ class OrdersController {
 		}
 	}
 	
-	async getByIdWithPhoneOrToken (req, res, next){
-		try {
-			const { id } = req.params;
-			if ( !id ) return next(ApiError.badRequest('Нет данных'));
-			
-			if(req.phone){
-				const orders = await Orders.findOne({where: {
-						phone: req.phone,
-						id: id
-					}})
-				return res.json({message: orders})
-			} else {
-				const orders = await Orders.findOne({where: {
-						userId: req.userId,
-						id: id
-					}})
-				return res.json({message: orders})
-			}
-			
-		}catch (e){
-			return next(ApiError.internal(e.message));
-		}
-	}
-	
 	async search (req, res, next){
 		try {
-			const { phone } = req.query;
+			const { nomer } = req.query;
+			if ( !nomer ) return next(ApiError.badRequest('Нет данных'));
 			
-			if(phone){
-				const orders = await Orders.findAll({where: {
-						phone: phone,
-					},
-					order: [["id", "DESC"]]
-				})
-				return res.json({message: orders})
-			}
+			const order = await Orders.findOne({where: {
+					nomer: nomer,
+				},
+				order: [["id", "DESC"]]
+			})
+			return res.json({message: order})
 
 		}catch (e){
 			return next(ApiError.internal(e.message));
