@@ -7,7 +7,7 @@ const { check, validationResult } = require('express-validator');
 
 
 router.post('/login', 
-    check('email').optional().isEmail()
+    check('email').isEmail()
         .isLength({ min: 5, max: 70 }).withMessage('Email должен содержать от 5 до 75 символов')
         .withMessage('Введите корректный email').normalizeEmail(),
     check('code').optional().isLength({ min: 6, max: 6 }).withMessage('Размер кода 6 символов').isNumeric().withMessage('Код должен быть числом'), 

@@ -12,23 +12,27 @@ class UserController {
 			
 			const { email, code } = req.body;
 			
-			if(email){
+			if(email && !code){
 				const user = await Users.findOrCreate({
 					where: { email: email }
 				})
-				sendEmail(user);
+				sendMail(user);
 			}
 
-			if(code){
-				const findUserWithCode = enteredUsers.find(user => user.code === Number(code));
+			if(code && email){
+				
+				const findUserWithCode = enteredUsers.find(user => user.code === Number(code) &&  user.user[0].dataValues.email === email);
 				if(!findUserWithCode) return next(ApiError.badRequest('Неверный код'));
 				const token = generateJwt(findUserWithCode.user[0].dataValues.id);
 				return res.json({message: token});
-				
 			}
 
-			function sendEmail (userDB){
-				const randomCode = generateCode();
+			function sendMail (userDB){
+				let randomCode;
+    			do {
+    			    randomCode = generateCode();
+    			} while (enteredUsers.some(user => user.code === randomCode)); 
+
 				let mailOptions = {
 					from: '"React-pizza" <diepioRegistarion@yandex.ru>',
 					to: email,
@@ -44,7 +48,7 @@ class UserController {
 
 				enteredUsers.push({user: userDB, code: randomCode})
 
-				return res.json({message: "Ваш код на почте )" + randomCode});
+				return res.json({message: "Ваш код на почте"});
 			}
 			
 		}catch (e) {
