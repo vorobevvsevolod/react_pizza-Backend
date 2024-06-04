@@ -129,13 +129,13 @@ class BasketController {
 				const increasePromises = productCombo.map(async pr => {
 					if (pr.pizzasSizesVariantId) {
 						const PizzasS = await PizzasSizesVariants.findOne({ where: { id: pr.pizzasSizesVariantId } });
-						const pizzaC = await PizzaCombo.findOne({ where: { productId: PizzasS.productId } });
+						const pizzaC = await PizzaCombo.findOne({ where: { productId: PizzasS.productId,comboId: ComboInfo.id } });
 				
 						return pizzaC.increase;
 					}
 				
 					if (pr.productId) {
-						const pizzaC = await PizzaCombo.findOne({ where: { productId: pr.productId } });
+						const pizzaC = await PizzaCombo.findOne({ where: { productId: pr.productId,comboId: ComboInfo.id  } });
 						return pizzaC.increase;
 					}
 				
@@ -145,6 +145,8 @@ class BasketController {
 				const increases = await Promise.all(increasePromises);
 				
 				const totalIncrease = increases.reduce((acc, curr) => acc + curr, 0);
+
+				console.log(increases, totalIncrease)
 
 				return {
 					id: item.id,
@@ -251,7 +253,7 @@ class BasketController {
 	
 	async deleteDopProduct (req, res, next) {
 		try {
-			const { basketId, dopProductId } = req.query;
+			const { basketId, dopProductId } = req.body;
 			if ( !basketId || !dopProductId) return next(ApiError.badRequest('Нет данных'));
 			
 			const deleteDopProduct = await BasketPizzaDopProduct.destroy({

@@ -46,6 +46,7 @@ router.patch('/username', [
     .withMessage('Введите корректный email').normalizeEmail()
   ], async (req, res, next) => {
     const errors = validationResult(req);
+    console.log("123")
     if (!errors.isEmpty()) {
          const errorMessages = errors.array().map(error => error.msg);
         return next(ApiError.validationError('Ошибка обновления email: ' + errorMessages));

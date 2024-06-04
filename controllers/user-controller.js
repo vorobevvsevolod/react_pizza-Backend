@@ -10,6 +10,7 @@ class UserController {
 	async login (req, res, next) {
 		try {
 			
+			
 			const { email, code } = req.body;
 			
 			if(email && !code){
@@ -122,9 +123,9 @@ class UserController {
 			if (!user) return next(ApiError.badRequest('Пользователь не найден'));
 
 			const userPhone = await Users.findOne({ where: { phone: phone } });
-			
+		
 			if (userPhone && user.phone) return next(ApiError.badRequest(`Этот номер телефона привязан к другой почте (${hideEmail(userPhone.email)}), если вы хотите пользоваться этим номером телефона войдите в другой акканут к которому привязан этот номер телефона!`));
-	
+			
 			const ordersUserId = await Orders.findAll({ where: { userId: req.userId } });
 	
 			const promisesOne = ordersUserId.map((orderUserId) => {

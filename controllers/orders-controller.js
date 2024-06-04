@@ -90,31 +90,44 @@ class OrdersController {
 			
 			if(req.phone){
 				if(id){
-					const orders = await Orders.findAll({where: {
+					const orders = await Orders.findAll({
+						where: {
 							phone: req.phone,
 							id: id
-						}})
-					return res.json({message: orders})
+						},
+						order: [['createdAt', 'DESC']]
+					});
+					return res.json({message: orders});
 				} else {
-					const orders = await Orders.findAll({where: {
+					const orders = await Orders.findAll({
+						where: {
 							phone: req.phone
-						}})
-					return res.json({message: orders})
+						},
+						order: [['createdAt', 'DESC']]
+					});
+					return res.json({message: orders});
 				}
 			} else {
 				if(id){
-					const orders = await Orders.findAll({where: {
+					const orders = await Orders.findAll({
+						where: {
 							userId: req.userId,
 							id: id
-						}})
-					return res.json({message: orders})
+						},
+						order: [['createdAt', 'DESC']]
+					});
+					return res.json({message: orders});
 				} else {
-					const orders = await Orders.findAll({where: {
+					const orders = await Orders.findAll({
+						where: {
 							userId: req.userId
-						}})
-					return res.json({message: orders})
+						},
+						order: [['createdAt', 'DESC']]
+					});
+					return res.json({message: orders});
 				}
 			}
+			
 			
 			
 		}catch (e) {

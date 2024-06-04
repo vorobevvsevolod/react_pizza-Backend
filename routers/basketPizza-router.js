@@ -87,6 +87,7 @@ router.post('/dopproduct', AuthorizationMiddleware,
       check('basketId').isNumeric().withMessage('Идентификатор типа должен быть числом').escape(),
       check('dopProductId').isNumeric().withMessage('Идентификатор типа должен быть числом').escape(),
     ], async (req, res, next) => {
+      console.log("123")
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const errorMessages = errors.array().map(error => error.msg);
